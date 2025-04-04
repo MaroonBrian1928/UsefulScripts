@@ -45,13 +45,12 @@ foreach ($secretDetail in $secretDetailsArray) {
     $secretName  = $secretDetail.name
     $secretValue = $secretDetail.value
     
-    # If the source secret has an expiration date, reuse it; otherwise set 1 year from now
+    # Check if the secret has an expiration date; if so, convert it to the required UTC format.
     if ($secretDetail.attributes.expires) {
-        $expirationDate = $secretDetail.attributes.expires
+        $expirationDate = [datetime]::Parse($secretDetail.attributes.expires).ToUniversalTime().ToString("yyyy-MM-dd'T'HH:mm:ss'Z'")
     }
     else {
-        # Use the proper date format: yyyy-MM-dd'T'HH:mm:ss'Z'
-        $expirationDate = (Get-Date).AddHours($hoursUntilExpiry).ToString("yyyy-MM-dd'T'HH:mm:ss'Z'")
+        $expirationDate = (Get-Date).AddHours($hoursUntilExpiry).ToUniversalTime().ToString("yyyy-MM-dd'T'HH:mm:ss'Z'")
     }
 
     Write-Host "`n--- Migrating secret: $secretName ---"
@@ -77,7 +76,6 @@ foreach ($secretDetail in $secretDetailsArray) {
     # -----------------------------
     # (Optional) Set a rotation policy
     # -----------------------------
-    # Example: Rotate 30 days before the secret expires.
     $policyJson = @"
 {
   "lifetimeActions": [
