@@ -50,14 +50,14 @@ foreach ($secretDetail in $secretDetailsArray) {
         $expirationDate = $secretDetail.attributes.expires
     }
     else {
-        $expirationDate = (Get-Date).AddHours($hoursUntilExpiry).ToString("yyyy-MM-ddTHH:mm:ssZ")
+        # Use the proper date format: yyyy-MM-dd'T'HH:mm:ss'Z'
+        $expirationDate = (Get-Date).AddHours($hoursUntilExpiry).ToString("yyyy-MM-dd'T'HH:mm:ss'Z'")
     }
 
     Write-Host "`n--- Migrating secret: $secretName ---"
     Write-Host "   Setting secret value and expiration date: $expirationDate"
 
     # Create/Update the secret in the target vault
-    # (Use --expires to set the expiration date)
     if ($secretDetail.contentType) {
         az keyvault secret set `
             --vault-name $targetVaultName `
@@ -78,17 +78,6 @@ foreach ($secretDetail in $secretDetailsArray) {
     # (Optional) Set a rotation policy
     # -----------------------------
     # Example: Rotate 30 days before the secret expires.
-    # This uses "az keyvault secret rotation-policy set" with a JSON policy inlined.
-    # For large scripts, you might prefer a separate JSON file.
-
-    # Construct a rotation policy JSON in memory
-    # This sets the secret to "Rotate" 30 days before expiry.
-    # "attributes.expiryTime" here means the default rotation interval if you want Key Vault
-    # to interpret it as "secret should be considered expired after X days." 
-    # But we already set an explicit date above. 
-    # If you prefer a pure time-based rotation (e.g., rotate every 90 days), set "expiryTime": "P90D"
-    # and skip the absolute expiration date on the secret itself.
-    
     $policyJson = @"
 {
   "lifetimeActions": [
