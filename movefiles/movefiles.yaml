@@ -1,0 +1,43 @@
+jobs:
+  deploy:
+    runs-on: ubuntu-latest
+    permissions:
+      id-token: write    # Required for federated identity
+      contents: read
+    env:
+      AZURE_TENANT_ID: ${{ secrets.AZURE_TENANT_ID }}
+      AZURE_CLIENT_ID: ${{ secrets.AZURE_CLIENT_ID }}
+      AZURE_SUBSCRIPTION_ID: ${{ secrets.AZURE_SUBSCRIPTION_ID }}
+    steps:
+      - name: Checkout Repository
+        uses: actions/checkout@v3
+
+      # Step 1: Authenticate to Azure using federated credentials.
+      - name: Login to Azure using federated identity
+        uses: azure/login@v1
+        with:
+          client-id: ${{ env.AZURE_CLIENT_ID }}
+          tenant-id: ${{ env.AZURE_TENANT_ID }}
+          subscription-id: ${{ env.AZURE_SUBSCRIPTION_ID }}
+
+      # Step 2: Retrieve an OAuth token for Azure Storage.
+      - name: Get Storage Access Token
+        id: getToken
+        run: |
+          # Request a token for the storage resource.
+          token=$(az account get-access-token --resource https://storage.azure.com --query accessToken -o tsv)
+          # Make the token available to subsequent steps.
+          echo "STORAGE_OAUTH_TOKEN=$token" >> $GITHUB_ENV
+
+      # Step 3: Use AzCopy with the OAuth token.
+      - name: Use AzCopy with Federated Credentials
+        run: |
+          echo "Logging into AzCopy using OAuth token..."
+          # Option A: If AzCopy has a login command that accepts a token,
+          # you might run (if supported by your AzCopy version):
+          # azcopy login --oauth-token $STORAGE_OAUTH_TOKEN
+          #
+          # Option B (more common): Export the token as an environment variable so that AzCopy picks it up.
+          export AZCOPY_SPA_ACCESS_TOKEN=$STORAGE_OAUTH_TOKEN
+          # Now run an AzCopy command.
+          azcopy copy "https://<your-storage-account>.blob.core.windows.net/<source-container>" "https://<your-storage-account>.blob.core.windows.net/<destination-container>" --recursive
