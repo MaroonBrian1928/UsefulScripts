@@ -1,31 +1,30 @@
-variable "custom_hostname" {
-  type        = string
-  description = "The hostname to map to the IP"
-}
-
-module "my_module" {
-  source = "./module"
-  # ...
-}
-
 resource "azurerm_virtual_machine_run_command" "update_hosts" {
-  name               = "add-to-hosts"
-  virtual_machine_id = azurerm_windows_virtual_machine.my_vm.id
+  for_each           = module.windowsvms
+  name               = "add-to-hosts-${each.key}"
+  virtual_machine_id = each.value.id
   run_as_user        = "System"
+  timeout_in_seconds = 600
 
-  lifecycle {
-    ignore_changes = [
-      # Prevent constant re-application
-      run_as_user,
-      source,
-      script_content,
-    ]
+  source {
+    script = <<-EOF
+      # Build an array of all VM IP/host pairs
+      $entries = @(
+%{ for vm_key, vm in module.windowsvms }
+        @{ ip = "${vm.ip_address}"; name = "${vm.name}" },
+%{ endfor }
+      )
+
+      # For each entry, append to hosts if missing
+      foreach ($e in $entries) {
+        $ip       = $e.ip
+        $hostname = $e.name
+        $pattern  = "^\s*$ip\s+$hostname$"
+        if (-not (Select-String -Path "C:\\Windows\\System32\\drivers\\etc\\hosts" `
+                              -Pattern $pattern -Quiet)) {
+          Add-Content -Path "C:\\Windows\\System32\\drivers\\etc\\hosts" `
+                      -Value "$ip`t$hostname"
+        }
+      }
+    EOF
   }
-
-  script_content = <<-EOF
-    $ip = "${module.my_module.my_ip_output}"
-    $hostname = "${var.custom_hostname}"
-    $entry = "$ip`t$hostname"
-    Add-Content -Path "C:\\Windows\\System32\\drivers\\etc\\hosts" -Value $entry
-  EOF
 }
