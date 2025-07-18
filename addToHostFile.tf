@@ -41,3 +41,16 @@ Select-Object TimeCreated, Message | Format-Table -AutoSize
 Get-WinEvent -LogName Security -FilterXPath "*[System[(EventID=4688)]]" |
 Where-Object { $_.Message -match "sc\.exe|powershell|Stop-Service" } |
 Select-Object TimeCreated, Message | Format-Table -Wrap
+
+Get-ScheduledTask | Where-Object { $_.Actions -match "Stop-Service|RemoteRegistry" }
+
+Get-DscConfigurationStatus
+Get-DscLocalConfigurationManager
+
+Get-Service WindowsAzureGuestAgent
+Get-ChildItem "C:\Packages\Plugins" | Select Name
+
+gpresult /h C:\gp.html
+Start-Process "C:\gp.html"
+
+
