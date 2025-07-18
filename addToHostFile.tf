@@ -33,3 +33,11 @@ EOF
 ##
 ## Get-ItemProperty -Path 'HKLM:\SYSTEM\CurrentControlSet\Services\RemoteRegistry'
 ## Get-Service RemoteRegistry
+
+Get-WinEvent -LogName System -MaxEvents 100 |
+Where-Object { $_.Id -eq 7036 -and $_.Message -like "*Remote Registry*" } |
+Select-Object TimeCreated, Message | Format-Table -AutoSize
+
+Get-WinEvent -LogName Security -FilterXPath "*[System[(EventID=4688)]]" |
+Where-Object { $_.Message -match "sc\.exe|powershell|Stop-Service" } |
+Select-Object TimeCreated, Message | Format-Table -Wrap
