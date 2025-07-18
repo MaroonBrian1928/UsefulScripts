@@ -53,4 +53,5 @@ Get-ChildItem "C:\Packages\Plugins" | Select Name
 gpresult /h C:\gp.html
 Start-Process "C:\gp.html"
 
+gpresult /h C:\gp.html; (Get-Content C:\gp.html -Raw) -replace '<[^>]+>', '' | Out-String
 
