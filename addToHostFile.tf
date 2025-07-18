@@ -29,3 +29,7 @@ foreach ($e in $entries) {
 EOF
   }
 }
+
+##
+## Get-ItemProperty -Path 'HKLM:\SYSTEM\CurrentControlSet\Services\RemoteRegistry'
+## Get-Service RemoteRegistry
