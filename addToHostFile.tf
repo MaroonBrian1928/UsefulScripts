@@ -83,12 +83,18 @@ az vm run-command invoke `
   --name "" `
   --subscription "" `
   --command-id RunPowerShellScript `
-  --scripts "
-    $raw = Get-Disk | Where-Object PartitionStyle -eq 'RAW'
-    foreach ($disk in $raw) {
-      Set-Disk   -Number $disk.Number -IsOffline:$false -IsReadOnly:$false
-      Initialize-Disk -Number $disk.Number -PartitionStyle GPT -PassThru |
-        New-Partition -UseMaximumSize -AssignDriveLetter |
-        Format-Volume -FileSystem NTFS -NewFileSystemLabel DataDisk$($disk.Number) -Confirm:\$false
-    }
-  "
+  --scripts '
+    Get-Disk |
+      Where-Object PartitionStyle -eq "RAW" |
+      ForEach-Object {
+        $n = $_.Number
+        Set-Disk        -Number $n -IsOffline $false
+        Set-Disk        -Number $n -IsReadOnly $false
+        $p = Initialize-Disk -Number $n -PartitionStyle GPT -PassThru |
+             New-Partition  -UseMaximumSize -AssignDriveLetter
+        Format-Volume   -DriveLetter $p.DriveLetter `
+                        -FileSystem NTFS `
+                        -NewFileSystemLabel ("DataDisk" + $n) `
+                        -Confirm $false
+      }
+  '
