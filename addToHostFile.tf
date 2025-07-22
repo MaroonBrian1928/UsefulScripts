@@ -74,3 +74,27 @@ foreach ($disk in $raw) {
       # d) Format it as NTFS without prompt
       Format-Volume -FileSystem NTFS -NewFileSystemLabel "DataDisk$($disk.Number)" -Confirm:$false
 }
+
+
+
+
+az vm run-command invoke \
+  --resource-group MyResourceGroup \
+  --name MyVmName \
+  --command-id RunPowerShellScript \
+  --scripts @- <<'EOF'
+# Detect RAW disks
+$raw = Get-Disk | Where-Object PartitionStyle -Eq 'RAW'
+
+foreach ($disk in $raw) {
+    # Bring online & clear read-only
+    Set-Disk -Number $disk.Number -IsOffline:$false -IsReadOnly:$false
+
+    # Initialize, partition, format, and assign drive letter
+    Initialize-Disk -Number $disk.Number -PartitionStyle GPT -PassThru |
+      New-Partition -UseMaximumSize -AssignDriveLetter |
+      Format-Volume -FileSystem NTFS `
+        -NewFileSystemLabel "DataDisk$($disk.Number)" `
+        -Confirm:$false
+}
+EOF
