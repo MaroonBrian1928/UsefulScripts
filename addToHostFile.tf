@@ -55,3 +55,22 @@ Start-Process "C:\gp.html"
 
 gpresult /h C:\gp.html; (Get-Content C:\gp.html -Raw) -replace '<[^>]+>', '' | Out-String
 
+
+# 1. List all attached disks and identify uninitialized (RAW) ones:
+Get-Disk | Where-Object PartitionStyle -Eq 'RAW'
+
+# 2. For each RAW disk, bring it online, initialize, partition, format, and assign a drive letter:
+$raw = Get-Disk | Where-Object PartitionStyle -Eq 'RAW'
+foreach ($disk in $raw) {
+    # a) Bring online and clear read-only if set
+    Set-Disk   -Number $disk.Number -IsOffline:$false -IsReadOnly:$false
+
+    # b) Initialize with GPT partition style
+    Initialize-Disk -Number $disk.Number -PartitionStyle GPT -PassThru |
+
+      # c) Create a single full-size partition and assign next available drive letter
+      New-Partition -UseMaximumSize -AssignDriveLetter |
+
+      # d) Format it as NTFS without prompt
+      Format-Volume -FileSystem NTFS -NewFileSystemLabel "DataDisk$($disk.Number)" -Confirm:$false
+}
