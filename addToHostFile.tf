@@ -78,23 +78,17 @@ foreach ($disk in $raw) {
 
 
 
-az vm run-command invoke \
-  --resource-group MyResourceGroup \
-  --name MyVmName \
-  --command-id RunPowerShellScript \
-  --scripts @- <<'EOF'
-# Detect RAW disks
-$raw = Get-Disk | Where-Object PartitionStyle -Eq 'RAW'
-
-foreach ($disk in $raw) {
-    # Bring online & clear read-only
-    Set-Disk -Number $disk.Number -IsOffline:$false -IsReadOnly:$false
-
-    # Initialize, partition, format, and assign drive letter
-    Initialize-Disk -Number $disk.Number -PartitionStyle GPT -PassThru |
-      New-Partition -UseMaximumSize -AssignDriveLetter |
-      Format-Volume -FileSystem NTFS `
-        -NewFileSystemLabel "DataDisk$($disk.Number)" `
-        -Confirm:$false
-}
-EOF
+az vm run-command invoke `
+  --resource-group "" `
+  --name "" `
+  --subscription "" `
+  --command-id RunPowerShellScript `
+  --scripts "
+    $raw = Get-Disk | Where-Object PartitionStyle -eq 'RAW'
+    foreach ($disk in $raw) {
+      Set-Disk   -Number $disk.Number -IsOffline:$false -IsReadOnly:$false
+      Initialize-Disk -Number $disk.Number -PartitionStyle GPT -PassThru |
+        New-Partition -UseMaximumSize -AssignDriveLetter |
+        Format-Volume -FileSystem NTFS -NewFileSystemLabel DataDisk$($disk.Number) -Confirm:\$false
+    }
+  "
