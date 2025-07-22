@@ -75,7 +75,7 @@ foreach ($disk in $raw) {
       Format-Volume -FileSystem NTFS -NewFileSystemLabel "DataDisk$($disk.Number)" -Confirm:$false
 }
 
-
+Start-Process -FilePath 'C:\path\to\your-script.bat' -Wait -NoNewWindow
 
 
 az vm run-command invoke `
