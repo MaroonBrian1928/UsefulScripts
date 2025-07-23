@@ -94,3 +94,14 @@ az vm run-command invoke `
 terraform import \
   'module.db_windows_vms["0"].azurerm_virtual_machine_data_disk_attachment.disks_attachment["disk1"]' \
   /subscriptions/<SUB_ID>/resourceGroups/<RG_NAME>/providers/Microsoft.Compute/virtualMachines/<VM_NAME>/dataDisks/<DISK_NAME>
+
+
+# Get any Database Engine service (default = MSSQLSERVER, named = MSSQL$InstanceName)
+$sqlServices = Get-Service |
+    Where-Object { $_.Name -eq 'MSSQLSERVER' -or $_.Name -like 'MSSQL$*' }
+
+if ($sqlServices) {
+    Write-Host 'sql installed'
+} else {
+    Write-Host 'heck its not on here'
+}
