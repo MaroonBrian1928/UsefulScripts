@@ -89,3 +89,8 @@ az vm run-command invoke `
       $p = Initialize-Disk -Number $_.Number -PartitionStyle GPT -PassThru | New-Partition -UseMaximumSize -AssignDriveLetter; 
       Format-Volume -DriveLetter $p.DriveLetter -FileSystem NTFS -NewFileSystemLabel "DataDisk$($_.Number)" -Confirm:$false 
   }'
+
+
+terraform import \
+  'module.db_windows_vms["0"].azurerm_virtual_machine_data_disk_attachment.disks_attachment["disk1"]' \
+  /subscriptions/<SUB_ID>/resourceGroups/<RG_NAME>/providers/Microsoft.Compute/virtualMachines/<VM_NAME>/dataDisks/<DISK_NAME>
