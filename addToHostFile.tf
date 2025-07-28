@@ -105,3 +105,6 @@ if ($sqlServices) {
 } else {
     Write-Host 'heck its not on here'
 }
+
+SELECT @@SERVERNAME AS ServerName, 
+       SERVERPROPERTY('InstanceName') AS InstanceName;
