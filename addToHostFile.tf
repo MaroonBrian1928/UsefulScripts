@@ -108,3 +108,6 @@ if ($sqlServices) {
 
 SELECT @@SERVERNAME AS ServerName, 
        SERVERPROPERTY('InstanceName') AS InstanceName;
+
+CREATE LOGIN [ENT\VMADMIN] FROM WINDOWS;
+ALTER SERVER ROLE [sysadmin] ADD MEMBER [ENT\VMADMIN];
