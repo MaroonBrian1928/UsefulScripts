@@ -1,0 +1,76 @@
+<#
+Downloads and installs the specific Strawberry Perl MSI you provided, silently.
+
+MSI silent flags reference: https://learn.microsoft.com/en-us/windows-server/administration/windows-commands/msiexec
+#>
+
+[CmdletBinding()]
+param(
+  [string]$MsiUrl = "https://github.com/StrawberryPerl/Perl-Dist-Strawberry/releases/download/SP_54201_64bit/strawberry-perl-5.42.0.1-64bit.msi",
+  [string]$InstallDir = "C:\Strawberry",
+  [switch]$KeepInstaller
+)
+
+$ErrorActionPreference = "Stop"
+
+function Assert-Admin {
+  $isAdmin = ([Security.Principal.WindowsPrincipal] [Security.Principal.WindowsIdentity]::GetCurrent()
+    ).IsInRole([Security.Principal.WindowsBuiltInRole]::Administrator)
+  if (-not $isAdmin) { throw "Run this script from an elevated PowerShell (Run as Administrator)." }
+}
+
+function Download-File {
+  param(
+    [Parameter(Mandatory=$true)][string]$Url,
+    [Parameter(Mandatory=$true)][string]$OutFile
+  )
+
+  try { [Net.ServicePointManager]::SecurityProtocol = [Net.SecurityProtocolType]::Tls12 } catch {}
+  Invoke-WebRequest -Uri $Url -OutFile $OutFile -UseBasicParsing
+}
+
+function Install-MsiSilent {
+  param(
+    [Parameter(Mandatory=$true)][string]$MsiPath,
+    [Parameter(Mandatory=$true)][string]$InstallDir
+  )
+
+  $log = Join-Path $env:TEMP ("strawberryperl-install-{0:yyyyMMdd-HHmmss}.log" -f (Get-Date))
+
+  $args = @(
+    "/i", "`"$MsiPath`"",
+    "/qn",
+    "/norestart",
+    "/l*v", "`"$log`"",
+    "INSTALLDIR=`"$InstallDir`""
+  )
+
+  $p = Start-Process -FilePath "msiexec.exe" -ArgumentList $args -Wait -PassThru
+  if ($p.ExitCode -ne 0) {
+    throw "MSI install failed with exit code $($p.ExitCode). Log: $log"
+  }
+
+  Write-Host "Installed Strawberry Perl to $InstallDir"
+  Write-Host "MSI log: $log"
+}
+
+Assert-Admin
+
+$destDir = Join-Path $env:TEMP "strawberryperl"
+New-Item -ItemType Directory -Path $destDir -Force | Out-Null
+
+# Derive filename from URL
+$msiName = Split-Path -Path $MsiUrl -Leaf
+$msiPath = Join-Path $destDir $msiName
+
+Write-Host "Downloading:"
+Write-Host "  $MsiUrl"
+Write-Host "To:"
+Write-Host "  $msiPath"
+
+Download-File -Url $MsiUrl -OutFile $msiPath
+Install-MsiSilent -MsiPath $msiPath -InstallDir $InstallDir
+
+if (-not $KeepInstaller) {
+  Remove-Item -Path $msiPath -Force -ErrorAction SilentlyContinue
+}
