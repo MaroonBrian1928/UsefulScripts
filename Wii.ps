@@ -8,6 +8,10 @@ New-ItemProperty `
     -Path $appid `
     -Name Endpoints `
     -PropertyType MultiString `
-    -Value @('ncacn_ip_tcp,0,5010') `
+    -Value @('ncacn_ip_tcp,0,5011') `
     -Force
 
+
+$wmiPid = [int](((sc.exe queryex winmgmt) | Select-String 'PID').ToString().Split(':')[1].Trim())
+Get-NetTCPConnection -LocalPort 5011 -State Listen |
+    Where-Object { $_.OwningProcess -eq $wmiPid }
