@@ -1,0 +1,13 @@
+$appid = 'HKLM:\SOFTWARE\Classes\AppID\{8BC3F05E-D86B-11D0-A075-00C04FB68820}'
+
+# back up current value first
+$current = Get-ItemProperty -Path $appid -Name Endpoints -ErrorAction SilentlyContinue
+
+# set WMI to use TCP 5010
+New-ItemProperty `
+    -Path $appid `
+    -Name Endpoints `
+    -PropertyType MultiString `
+    -Value @('ncacn_ip_tcp,0,5010') `
+    -Force
+
