@@ -1,0 +1,21 @@
+onboarding = false
+
+[ui]
+status_indicators = "symbols"
+prompt_new_workspace_name = true
+
+[ui.toast]
+delivery = "terminal"
+
+[theme]
+name = "dracula"
+auto_switch = false
+
+[keys]
+prefix = "cmd+ctrl+alt+shift+w"
+previous_workspace = "cmd+ctrl+alt+shift+up"
+next_workspace = "cmd+ctrl+alt+shift+down"
+previous_tab = ["prefix+p", "cmd+ctrl+alt+shift+left"]
+next_tab = ["prefix+n", "cmd+ctrl+alt+shift+right"]
+previous_agent = "cmd+ctrl+alt+shift+["
+next_agent = "cmd+ctrl+alt+shift+]"
