@@ -3,6 +3,10 @@ onboarding = false
 [ui]
 status_indicators = "symbols"
 prompt_new_workspace_name = true
+prompt_new_tab_name = false
+sidebar_width = 36
+sidebar_max_width = 44
+tab_bar_right = [{ type = "text", text = "mac" },{ type = "datetime", format = "%H:%M" }]
 
 [ui.toast]
 delivery = "terminal"
@@ -19,3 +23,25 @@ previous_tab = ["prefix+p", "cmd+ctrl+alt+shift+left"]
 next_tab = ["prefix+n", "cmd+ctrl+alt+shift+right"]
 previous_agent = "cmd+ctrl+alt+shift+["
 next_agent = "cmd+ctrl+alt+shift+]"
+
+# Hyper+1..9 jumps to the Nth agent in the sidebar
+[keys.indexed]
+agents = "cmd+ctrl+alt+shift"
+
+[[keys.command]]
+key = "cmd+ctrl+alt+shift+k"
+type = "plugin_action"
+command = "herdr-bar.open"
+description = "command bar"
+
+# Agent sidebar: task title (with herdr-bar logo + status) first, location dimmed below
+[ui.sidebar.agents]
+rows = [
+  [{ token = "tab", rules = [
+    { contains = "◉", fg = "#ff5555", bold = true },
+    { contains = "◐", fg = "#f1fa8c" },
+    { contains = "●", fg = "#50fa7b" },
+    { contains = "✓", fg = "#f8f8f2" },
+  ] }],
+  [{ token = "machine", fg = "#8be9fd", rules = [{ equals = "Local", hide = true }] }, { token = "workspace", fg = "#bd93f9" }],
+]
